@@ -12,7 +12,6 @@ public class ComputerDbContext : DbContext
     public DbSet<Computer> Computers { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserSession> UserSessions { get; set; }
-    public DbSet<Transaction> Transactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,10 +49,5 @@ public class ComputerDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
-
-        modelBuilder.Entity<Transaction>()
-            .HasOne(t => t.User)
-            .WithMany()
-            .HasForeignKey(t => t.UserId);
     }
 }

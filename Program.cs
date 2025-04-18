@@ -42,8 +42,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Add authorization policies
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireAssertion(context =>
+        {
+            var isAdmin = context.User.FindFirst("IsAdmin")?.Value;
+            return isAdmin == "1";
+        }));
+    options.AddPolicy("UserOnly", policy =>
+        policy.RequireAssertion(context =>
+        {
+            var isAdmin = context.User.FindFirst("IsAdmin")?.Value;
+            return isAdmin == "0";
+        }));
 });
 
 var app = builder.Build();
@@ -74,6 +84,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Add cache control headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    context.Response.Headers["Pragma"] = "no-cache";
+    context.Response.Headers["Expires"] = "0";
+    await next();
+});
 
 app.UseRouting();
 

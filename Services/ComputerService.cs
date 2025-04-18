@@ -25,7 +25,6 @@ public class ComputerService : IComputerService
     {
         return await _context.Computers
             .Include(c => c.UserSessions)
-            .ThenInclude(us => us.User)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
@@ -63,7 +62,9 @@ public class ComputerService : IComputerService
     public async Task<UserSession?> GetActiveSessionAsync(int userId, int computerId)
     {
         return await _context.UserSessions
-            .FirstOrDefaultAsync(us => us.UserId == userId && us.ComputerId == computerId && us.EndTime == null);
+            .FirstOrDefaultAsync(s => s.UserId == userId
+                && s.ComputerId == computerId
+                && s.EndTime == null);
     }
 
     public async Task StartSessionAsync(UserSession session)
@@ -80,15 +81,24 @@ public class ComputerService : IComputerService
 
     public async Task EndSessionAsync(UserSession session)
     {
+        if (session == null)
+            throw new ArgumentNullException(nameof(session));
+
+        // Load the Computer entity if it's not loaded
+        if (session.Computer == null)
+        {
+            session.Computer = await _context.Computers.FindAsync(session.ComputerId);
+            if (session.Computer == null)
+                throw new InvalidOperationException($"Computer with ID {session.ComputerId} not found");
+        }
+
         session.EndTime = DateTime.Now;
         var duration = session.EndTime.Value - session.StartTime;
         session.TotalCost = (decimal)duration.TotalHours * session.Computer.PricePerHour;
 
-        if (session.Computer != null)
-        {
-            session.Computer.Status = true;
-            _context.Computers.Update(session.Computer);
-        }
+        // Update computer status
+        session.Computer.Status = true;
+        _context.Computers.Update(session.Computer);
 
         _context.UserSessions.Update(session);
         await _context.SaveChangesAsync();

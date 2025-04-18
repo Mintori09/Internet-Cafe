@@ -21,6 +21,27 @@
         </div>
     }
 
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Thông tin tài khoản</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Tên đăng nhập:</strong> @User.Identity.Name</p>
+                        <p><strong>Vai trò:</strong> @(User.IsInRole("Admin") ? "Quản trị viên" : "Người dùng")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Số dư tài khoản:</strong> <span class="text-success">@ViewBag.UserBalance?.ToString("N0") VNĐ</span></p>
+                        <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-primary btn-sm">Xem chi tiết tài khoản</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row">
         @foreach (var computer in Model)
         {

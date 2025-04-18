@@ -1,0 +1,142 @@
+@model InternetCafeManagementSystem.Models.User
+
+@{
+    ViewData["Title"] = "Chi tiết người dùng";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Thông tin người dùng</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Tên đăng nhập:</dt>
+                        <dd class="col-sm-8">@Model.Username</dd>
+
+                        <dt class="col-sm-4">Họ tên:</dt>
+                        <dd class="col-sm-8">@Model.FullName</dd>
+
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+
+                        <dt class="col-sm-4">Số dư:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-primary">@Model.Balance.ToString("N0") VNĐ</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Vai trò:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsAdmin)
+                            {
+                                <span class="badge bg-danger">Admin</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">User</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Cập nhật số dư</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdateBalance" method="post">
+                        <input type="hidden" name="userId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Số tiền cập nhật</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="amount" name="amount" min="0" required>
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Lịch sử sử dụng máy</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Sessions != null && Model.Sessions.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Máy tính</th>
+                                        <th>Thời gian bắt đầu</th>
+                                        <th>Thời gian kết thúc</th>
+                                        <th>Thời gian sử dụng</th>
+                                        <th>Chi phí</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var session in Model.Sessions.OrderByDescending(s => s.StartTime))
+                                    {
+                                        <tr>
+                                            <td>@session.Computer?.Name</td>
+                                            <td>@session.StartTime.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>@(session.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "Đang sử dụng")</td>
+                                            <td>
+                                                @if (session.EndTime != null)
+                                                {
+                                                    var duration = session.EndTime - session.StartTime;
+                                                    @($"{duration.Value.Hours:00}:{duration.Value.Minutes:00}")
+                                                }
+                                                else
+                                                {
+                                                    @("Đang sử dụng")
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                @if (session.EndTime != null)
+                                                {
+                                                    <span class="badge bg-danger">@session.TotalCost.ToString("N0") VNĐ</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Đang tính</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Chưa có lịch sử sử dụng máy.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

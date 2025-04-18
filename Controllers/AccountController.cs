@@ -44,6 +44,32 @@ public class AccountController : BaseController
             var user = await _userService.LoginAsync(username, password);
             if (user != null)
             {
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim("FullName", user.FullName),
+                    new Claim("IsAdmin", user.IsAdmin ? "1" : "0")
+                };
+
+                // Thêm role cho người dùng
+                if (user.IsAdmin)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                }
+                else
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "User"));
+                }
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new AuthenticationProperties();
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+
                 HttpContext.Session.SetInt32("UserId", user.Id);
                 HttpContext.Session.SetString("Username", user.Username);
                 HttpContext.Session.SetString("FullName", user.FullName);
@@ -117,19 +143,11 @@ public class AccountController : BaseController
             return RedirectToAction("Login");
         }
 
-        // Lấy lịch sử giao dịch
-        var transactions = await _context.Transactions
-            .Where(t => t.UserId == userId)
-            .OrderByDescending(t => t.CreatedAt)
-            .Take(10)
-            .ToListAsync();
-
         // Lấy thông tin phiên sử dụng hiện tại
         var currentSession = await _context.UserSessions
             .Include(s => s.Computer)
             .FirstOrDefaultAsync(s => s.UserId == userId && s.EndTime == null);
 
-        ViewBag.Transactions = transactions;
         ViewBag.CurrentSession = currentSession;
 
         return View(user);
@@ -170,18 +188,6 @@ public class AccountController : BaseController
 
         user.Balance += amount;
         await _userService.UpdateUserAsync(user);
-
-        // Lưu lịch sử giao dịch
-        var transaction = new Transaction
-        {
-            UserId = user.Id,
-            Amount = amount,
-            Type = TransactionType.Deposit,
-            Description = "Nạp tiền vào tài khoản",
-            CreatedAt = DateTime.Now
-        };
-        _context.Transactions.Add(transaction);
-        await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = $"Đã nạp {amount:N0} VNĐ vào tài khoản thành công";
         return RedirectToAction("Profile");

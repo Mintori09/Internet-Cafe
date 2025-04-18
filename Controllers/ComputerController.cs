@@ -5,6 +5,7 @@ using InternetCafeManagementSystem.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using InternetCafeManagementSystem.Authorization;
 
 namespace InternetCafeManagementSystem.Controllers;
 
@@ -14,12 +15,18 @@ public class ComputerController : BaseController
     private readonly IComputerService _computerService;
     private readonly IUserService _userService;
     private readonly ComputerDbContext _context;
+    private readonly IAuthorizationService _authorizationService;
 
-    public ComputerController(IComputerService computerService, IUserService userService, ComputerDbContext context)
+    public ComputerController(
+        IComputerService computerService,
+        IUserService userService,
+        ComputerDbContext context,
+        IAuthorizationService authorizationService)
     {
         _computerService = computerService;
         _userService = userService;
         _context = context;
+        _authorizationService = authorizationService;
     }
 
     public async Task<IActionResult> Index()
@@ -31,6 +38,12 @@ public class ComputerController : BaseController
         {
             var activeSessions = await _computerService.GetUserSessionsAsync(userId);
             ViewBag.ActiveSessions = activeSessions.Where(s => s.EndTime == null).ToList();
+
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user != null)
+            {
+                ViewBag.UserBalance = user.Balance;
+            }
         }
 
         return View(computers);
@@ -48,7 +61,7 @@ public class ComputerController : BaseController
     }
 
     // GET: Computer/Create
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         return View();
@@ -57,11 +70,28 @@ public class ComputerController : BaseController
     // POST: Computer/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(Computer computer)
     {
         if (ModelState.IsValid)
         {
+            // Kiểm tra xem Name đã được điền chưa
+            if (string.IsNullOrEmpty(computer.Name))
+            {
+                ModelState.AddModelError("Name", "Tên máy không được để trống.");
+                return View(computer);
+            }
+
+            // Kiểm tra xem Name đã tồn tại chưa
+            var existingComputer = await _context.Computers
+                .FirstOrDefaultAsync(c => c.Name == computer.Name);
+
+            if (existingComputer != null)
+            {
+                ModelState.AddModelError("Name", $"Tên máy '{computer.Name}' đã tồn tại. Vui lòng chọn tên khác.");
+                return View(computer);
+            }
+
             await _computerService.AddComputerAsync(computer);
             TempData["SuccessMessage"] = "Thêm máy tính thành công.";
             return RedirectToAction(nameof(Index));
@@ -70,7 +100,7 @@ public class ComputerController : BaseController
     }
 
     // GET: Computer/Edit/5
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
     {
         var computer = await _computerService.GetComputerByIdAsync(id);
@@ -84,7 +114,7 @@ public class ComputerController : BaseController
     // POST: Computer/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id, Computer computer)
     {
         if (id != computer.Id)
@@ -92,17 +122,42 @@ public class ComputerController : BaseController
             return NotFound();
         }
 
+        // Kiểm tra tên máy tính
+        var existingComputer = await _context.Computers
+            .FirstOrDefaultAsync(c => c.Name == computer.Name && c.Id != id);
+
+        if (existingComputer != null)
+        {
+            ModelState.AddModelError("Name", $"Tên máy '{computer.Name}' đã tồn tại. Vui lòng chọn tên khác.");
+            return View(computer);
+        }
+
         if (ModelState.IsValid)
         {
-            await _computerService.UpdateComputerAsync(computer);
-            TempData["SuccessMessage"] = "Cập nhật máy tính thành công.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.Update(computer);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Cập nhật máy tính thành công.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ComputerExists(computer.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
         return View(computer);
     }
 
     // GET: Computer/Delete/5
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var computer = await _computerService.GetComputerByIdAsync(id);
@@ -116,7 +171,7 @@ public class ComputerController : BaseController
     // POST: Computer/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         await _computerService.DeleteComputerAsync(id);
@@ -274,11 +329,15 @@ public class ComputerController : BaseController
     [AcceptVerbs("Get", "Post")]
     public async Task<IActionResult> VerifyComputerName(string name, int id = 0)
     {
-        var computer = await _context.Computers.FirstOrDefaultAsync(c => c.Name == name && c.Id != id);
-        if (computer != null)
+        // Kiểm tra tên máy tính
+        var existingComputer = await _context.Computers
+            .FirstOrDefaultAsync(c => c.Name == name && c.Id != id);
+
+        if (existingComputer != null)
         {
-            return Json($"Tên máy {name} đã tồn tại");
+            return Json($"Tên máy '{name}' đã tồn tại. Vui lòng chọn tên khác.");
         }
+
         return Json(true);
     }
 

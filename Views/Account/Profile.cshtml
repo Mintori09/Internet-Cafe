@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Thông tin tài khoản";
-    var transactions = ViewBag.Transactions as List<Transaction> ?? new List<Transaction>();
     var currentSession = ViewBag.CurrentSession as UserSession;
 }
 
@@ -72,44 +71,6 @@
                     else
                     {
                         <p>Bạn chưa sử dụng máy nào</p>
-                    }
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Lịch sử giao dịch</h5>
-                </div>
-                <div class="card-body">
-                    @if (transactions.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Thời gian</th>
-                                        <th>Loại</th>
-                                        <th>Số tiền</th>
-                                        <th>Mô tả</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var transaction in transactions)
-                                    {
-                                        <tr>
-                                            <td>@transaction.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                                            <td>@transaction.Type</td>
-                                            <td>@transaction.Amount.ToString("N0") VNĐ</td>
-                                            <td>@transaction.Description</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <p>Chưa có giao dịch nào</p>
                     }
                 </div>
             </div>
