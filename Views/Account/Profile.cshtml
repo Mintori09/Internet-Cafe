@@ -1,0 +1,118 @@
+@model InternetCafeManagementSystem.Models.User
+
+@{
+    ViewData["Title"] = "Thông tin tài khoản";
+    var transactions = ViewBag.Transactions as List<Transaction> ?? new List<Transaction>();
+    var currentSession = ViewBag.CurrentSession as UserSession;
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Thông tin tài khoản</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tên đăng nhập:</strong> @Model.Username</p>
+                    <p><strong>Họ tên:</strong> @Model.FullName</p>
+                    <p><strong>Số dư:</strong> @Model.Balance.ToString("N0") VNĐ</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Nạp tiền</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Deposit" method="post">
+                        <div class="form-group mb-3">
+                            <label for="amount">Số tiền cần nạp (VNĐ)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="10000" step="10000" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Nạp tiền</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Phiên sử dụng hiện tại</h5>
+                </div>
+                <div class="card-body">
+                    @if (currentSession != null && currentSession.Computer != null)
+                    {
+                        var timeUsed = DateTime.Now - currentSession.StartTime;
+                        var remainingBalance = Model.Balance / currentSession.Computer.PricePerHour;
+                        var remainingTime = TimeSpan.FromHours((double)remainingBalance);
+
+                        <p><strong>Máy đang sử dụng:</strong> @currentSession.Computer.Name</p>
+                        <p><strong>Thời gian đã sử dụng:</strong> @timeUsed.ToString(@"hh\:mm\:ss")</p>
+                        <p><strong>Thời gian còn lại:</strong> @remainingTime.ToString(@"hh\:mm\:ss")</p>
+                        <p><strong>Đơn giá:</strong> @currentSession.Computer.PricePerHour.ToString("N0") VNĐ/giờ</p>
+                    }
+                    else
+                    {
+                        <p>Bạn chưa sử dụng máy nào</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Lịch sử giao dịch</h5>
+                </div>
+                <div class="card-body">
+                    @if (transactions.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Loại</th>
+                                        <th>Số tiền</th>
+                                        <th>Mô tả</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transaction in transactions)
+                                    {
+                                        <tr>
+                                            <td>@transaction.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>@transaction.Type</td>
+                                            <td>@transaction.Amount.ToString("N0") VNĐ</td>
+                                            <td>@transaction.Description</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Chưa có giao dịch nào</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

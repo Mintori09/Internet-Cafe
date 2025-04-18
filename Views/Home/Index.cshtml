@@ -1,8 +1,19 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to Internet Cafe Management System</h1>
+
+    @if (Context.Session.GetInt32("UserId") == null)
+    {
+        <p class="lead mt-4">Please <a asp-controller="Account" asp-action="Login">login</a> or <a asp-controller="Account" asp-action="Register">register</a> to start using our services.</p>
+    }
+    else
+    {
+        <p class="lead mt-4">Welcome back, @Context.Session.GetString("Username")!</p>
+        <div class="mt-4">
+            <a asp-controller="Computer" asp-action="Index" class="btn btn-primary btn-lg">View Available Computers</a>
+        </div>
+    }
 </div>

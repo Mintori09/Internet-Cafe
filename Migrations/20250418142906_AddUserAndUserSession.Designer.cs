@@ -3,7 +3,7 @@ using System;
 using InternetCafeManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,16 +11,16 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InternetCafeManagementSystem.Migrations
 {
     [DbContext(typeof(ComputerDbContext))]
-    partial class ComputerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250418142906_AddUserAndUserSession")]
+    partial class AddUserAndUserSession
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
-
-            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("InternetCafeManagementSystem.Models.Computer", b =>
                 {
@@ -28,29 +28,17 @@ namespace InternetCafeManagementSystem.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("longtext");
 
-                    b.Property<decimal>("PricePerHour")
-                        .HasPrecision(18, 2)
+                    b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("Status")
                         .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
 
                     b.ToTable("Computers");
                 });
@@ -61,24 +49,13 @@ namespace InternetCafeManagementSystem.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<decimal>("Balance")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("tinyint(1)");
@@ -100,9 +77,6 @@ namespace InternetCafeManagementSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Username")
-                        .IsUnique();
-
                     b.ToTable("Users");
                 });
 
@@ -112,12 +86,7 @@ namespace InternetCafeManagementSystem.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<int>("ComputerId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ComputerId1")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("EndTime")
@@ -127,7 +96,6 @@ namespace InternetCafeManagementSystem.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<decimal>("TotalCost")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("UserId")
@@ -137,8 +105,6 @@ namespace InternetCafeManagementSystem.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.HasIndex("ComputerId1");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("UserSessions");
@@ -147,36 +113,20 @@ namespace InternetCafeManagementSystem.Migrations
             modelBuilder.Entity("InternetCafeManagementSystem.Models.UserSession", b =>
                 {
                     b.HasOne("InternetCafeManagementSystem.Models.Computer", "Computer")
-                        .WithMany("Sessions")
+                        .WithMany()
                         .HasForeignKey("ComputerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("InternetCafeManagementSystem.Models.Computer", null)
-                        .WithMany("UserSessions")
-                        .HasForeignKey("ComputerId1");
-
                     b.HasOne("InternetCafeManagementSystem.Models.User", "User")
-                        .WithMany("Sessions")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Computer");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("InternetCafeManagementSystem.Models.Computer", b =>
-                {
-                    b.Navigation("Sessions");
-
-                    b.Navigation("UserSessions");
-                });
-
-            modelBuilder.Entity("InternetCafeManagementSystem.Models.User", b =>
-                {
-                    b.Navigation("Sessions");
                 });
 #pragma warning restore 612, 618
         }

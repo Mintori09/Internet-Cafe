@@ -1,0 +1,58 @@
+@model List<InternetCafeManagementSystem.Models.UserSession>
+
+@{
+    ViewData["Title"] = "Lịch sử sử dụng máy";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Máy tính</th>
+                    <th>Thời gian bắt đầu</th>
+                    <th>Thời gian kết thúc</th>
+                    <th>Tổng chi phí</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var session in Model)
+                {
+                    <tr>
+                        <td>@session.Computer?.Name</td>
+                        <td>@session.StartTime.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        <td>@(session.EndTime?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Đang sử dụng")</td>
+                        <td>@session.TotalCost.ToString("N0") VNĐ</td>
+                        <td>
+                            @if (session.EndTime == null)
+                            {
+                                <span class="badge bg-success">Đang sử dụng</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Đã kết thúc</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

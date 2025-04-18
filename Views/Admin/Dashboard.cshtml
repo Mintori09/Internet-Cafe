@@ -1,0 +1,130 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <!-- Revenue Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Revenue</h5>
+                    <h3 class="card-text">@ViewBag.TodayRevenue.ToString("C0")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Yesterday's Revenue</h5>
+                    <h3 class="card-text">@ViewBag.YesterdayRevenue.ToString("C0")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Last Week's Revenue</h5>
+                    <h3 class="card-text">@ViewBag.LastWeekRevenue.ToString("C0")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Last Month's Revenue</h5>
+                    <h3 class="card-text">@ViewBag.LastMonthRevenue.ToString("C0")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Sessions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Today's Sessions</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Computer</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var session in ViewBag.TodaySessions)
+                            {
+                                <tr>
+                                    <td>@session.UserId</td>
+                                    <td>@session.ComputerId</td>
+                                    <td>@session.StartTime.ToString("HH:mm")</td>
+                                    <td>@(session.EndTime?.ToString("HH:mm") ?? "In Progress")</td>
+                                    <td>@(session.EndTime.HasValue ? (session.EndTime.Value - session.StartTime).ToString(@"hh\:mm") : "In Progress")</td>
+                                    <td>@session.TotalCost.ToString("C0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hourly Statistics -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Hourly Session Count</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('hourlyChart').getContext('2d');
+        var hourlyStats = @Html.Raw(Json.Serialize(ViewBag.HourlyStats));
+
+        var labels = Object.keys(hourlyStats);
+        var data = Object.values(hourlyStats);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Sessions',
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

@@ -1,0 +1,78 @@
+@model IEnumerable<InternetCafeManagementSystem.Models.UserSession>
+
+@{
+    ViewData["Title"] = "Revenue by Time Period";
+    var defaultStartDate = DateTime.Today.AddDays(-7).ToString("yyyy-MM-dd");
+    var defaultEndDate = DateTime.Today.ToString("yyyy-MM-dd");
+    var startDate = ViewBag.StartDate is DateTime start ? start.ToString("yyyy-MM-dd") : defaultStartDate;
+    var endDate = ViewBag.EndDate is DateTime end ? end.ToString("yyyy-MM-dd") : defaultEndDate;
+}
+
+<div class="container mt-4">
+    <h2>Revenue by Time Period</h2>
+
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate" value="@startDate" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate" value="@endDate" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary form-control">Filter</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Total Sessions</th>
+                    <th>Total Revenue</th>
+                    <th>Average Session Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null)
+                {
+                    var sessionsByDate = Model.GroupBy(s => s.StartTime.Date);
+                    @foreach (var group in sessionsByDate)
+                    {
+                        var totalSessions = group.Count();
+                        var totalRevenue = group.Sum(s => s.TotalCost);
+                        var avgDuration = group.Average(s => s.EndTime.HasValue ? (s.EndTime.Value - s.StartTime).TotalHours : 0);
+
+                        <tr>
+                            <td>@group.Key.ToString("yyyy-MM-dd")</td>
+                            <td>@totalSessions</td>
+                            <td>@totalRevenue.ToString("C0")</td>
+                            <td>@avgDuration.ToString("F1") hours</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center">No data available</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>

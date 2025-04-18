@@ -1,0 +1,97 @@
+@{
+    ViewData["Title"] = "Revenue Statistics";
+}
+
+<div class="container mt-4">
+    <h2>Revenue Statistics</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Filter by Date Range</h5>
+            <form asp-action="GetRevenueStatistics" method="post">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="startDate">Start Date:</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate" required>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="endDate">End Date:</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary" style="margin-top: 32px;">Filter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (ViewBag.TotalRevenue != null)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Summary</h5>
+                <p>Total Revenue: @ViewBag.TotalRevenue.ToString("C")</p>
+                <p>Date Range: @ViewBag.StartDate.ToString("d") - @ViewBag.EndDate.ToString("d")</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Revenue by Computer</h5>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Computer</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var revenue in ViewBag.ComputerRevenues)
+                        {
+                            <tr>
+                                <td>@revenue.Key</td>
+                                <td>@revenue.Value.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Detailed Sessions</h5>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Computer</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Duration</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var session in ViewBag.Sessions)
+                        {
+                            <tr>
+                                <td>@session.User?.Username</td>
+                                <td>@session.Computer?.Name</td>
+                                <td>@session.StartTime.ToString("g")</td>
+                                <td>@(session.EndTime?.ToString("g") ?? "In Progress")</td>
+                                <td>@(session.EndTime.HasValue ? (session.EndTime.Value - session.StartTime).ToString(@"hh\:mm") : "N/A")</td>
+                                <td>@session.TotalCost.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

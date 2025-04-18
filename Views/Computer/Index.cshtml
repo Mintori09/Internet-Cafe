@@ -1,0 +1,86 @@
+@model List<InternetCafeManagementSystem.Models.Computer>
+
+@{
+    ViewData["Title"] = "Danh sách máy tính";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row">
+        @foreach (var computer in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@computer.Name</h5>
+                        <p class="card-text">
+                            <strong>Trạng thái:</strong>
+                            @if (computer.Status)
+                            {
+                                <span class="badge bg-success">Sẵn sàng</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Đang sử dụng</span>
+                            }
+                        </p>
+                        <p class="card-text">
+                            <strong>Giá/giờ:</strong> @computer.PricePerHour.ToString("N0") VNĐ
+                        </p>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <div class="btn-group">
+                                <a asp-action="Edit" asp-route-id="@computer.Id" class="btn btn-primary">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@computer.Id" class="btn btn-danger">Xóa</a>
+                            </div>
+                        }
+                        else
+                        {
+                            var activeSession = ViewBag.ActiveSessions != null ?
+                                ((List<InternetCafeManagementSystem.Models.UserSession>)ViewBag.ActiveSessions)
+                                .FirstOrDefault(s => s.ComputerId == computer.Id) : null;
+
+                            if (computer.Status)
+                            {
+                                <form asp-controller="Session" asp-action="StartSession" method="post">
+                                    <input type="hidden" name="computerId" value="@computer.Id" />
+                                    <button type="submit" class="btn btn-success">Bắt đầu sử dụng</button>
+                                </form>
+                            }
+                            else if (activeSession != null)
+                            {
+                                <form asp-controller="Session" asp-action="EndSession" method="post">
+                                    <input type="hidden" name="computerId" value="@computer.Id" />
+                                    <button type="submit" class="btn btn-warning">Kết thúc phiên</button>
+                                </form>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="mt-4">
+            <a asp-action="Create" class="btn btn-primary">Thêm máy tính mới</a>
+        </div>
+    }
+</div>

@@ -4,6 +4,7 @@ using InternetCafeManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InternetCafeManagementSystem.Migrations
 {
     [DbContext(typeof(ComputerDbContext))]
-    partial class ComputerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250418151723_AddIsActiveToUser")]
+    partial class AddIsActiveToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,22 +38,31 @@ namespace InternetCafeManagementSystem.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
+                    b.Property<DateTime?>("LastMaintenanceDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(65,30)");
+
                     b.Property<decimal>("PricePerHour")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Specifications")
+                        .HasColumnType("longtext");
 
                     b.Property<bool>("Status")
                         .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
 
                     b.ToTable("Computers");
                 });
@@ -100,9 +112,6 @@ namespace InternetCafeManagementSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Username")
-                        .IsUnique();
-
                     b.ToTable("Users");
                 });
 
@@ -115,9 +124,6 @@ namespace InternetCafeManagementSystem.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ComputerId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ComputerId1")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("EndTime")
@@ -137,8 +143,6 @@ namespace InternetCafeManagementSystem.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.HasIndex("ComputerId1");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("UserSessions");
@@ -151,10 +155,6 @@ namespace InternetCafeManagementSystem.Migrations
                         .HasForeignKey("ComputerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("InternetCafeManagementSystem.Models.Computer", null)
-                        .WithMany("UserSessions")
-                        .HasForeignKey("ComputerId1");
 
                     b.HasOne("InternetCafeManagementSystem.Models.User", "User")
                         .WithMany("Sessions")
@@ -170,8 +170,6 @@ namespace InternetCafeManagementSystem.Migrations
             modelBuilder.Entity("InternetCafeManagementSystem.Models.Computer", b =>
                 {
                     b.Navigation("Sessions");
-
-                    b.Navigation("UserSessions");
                 });
 
             modelBuilder.Entity("InternetCafeManagementSystem.Models.User", b =>

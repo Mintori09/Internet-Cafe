@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container">
+    <h1>Admin Dashboard</h1>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Revenue Statistics</h5>
+                    <div class="list-group">
+                        <a asp-action="RevenueByComputer" class="list-group-item list-group-item-action">
+                            Revenue by Computer
+                        </a>
+                        <a asp-action="RevenueByTime" class="list-group-item list-group-item-action">
+                            Revenue by Time Period
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
