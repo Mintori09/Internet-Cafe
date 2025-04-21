@@ -204,26 +204,142 @@ public class AccountController : BaseController
         return RedirectToAction("Profile");
     }
 
-    public async Task<IActionResult> UserList()
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> UserList()
+{
+    try
     {
-        try
+        var users = await _context.Users.ToListAsync();
+        return View(users);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error fetching user list");
+        return View(new List<User>());
+    }
+}
+    // GET: Account/Details/id
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Details(int? id)
+    {
+        if (id == null || id <= 0)
         {
-            // Kiểm tra quyền từ session
-            var role = HttpContext.Session.GetString("Role");
+            return NotFound();
+        }
 
-            if (string.IsNullOrEmpty(role) || role != "Admin")
+        var user = await _context.Users
+            .Include(u => u.Sessions)
+                .ThenInclude(s => s.Computer)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return View(user);
+    }
+
+    // GET: Account/Edit/id
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Edit(int? id)
+    {
+        if (id == null || id <= 0)
+        {
+            return NotFound();
+        }
+
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return View(user);
+    }
+
+    // POST: Account/Edit/id
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Edit(int id, User user)
+    {
+        if (id != user.Id)
+        {
+            return NotFound();
+        }
+
+        if (ModelState.IsValid)
+        {
+            try
             {
-                TempData["ErrorMessage"] = "You are not authorized to view this page.";
-                return RedirectToAction("Login", "Account");
-            }
+                var existingUser = await _context.Users.FindAsync(id);
+                if (existingUser == null)
+                {
+                    return NotFound();
+                }
 
-            var users = await _context.Users.ToListAsync();
-            return View(users);
+                existingUser.Username = user.Username;
+                existingUser.FullName = user.FullName;
+                existingUser.Balance = user.Balance;
+                existingUser.IsActive = user.IsActive;
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "User updated successfully";
+                return RedirectToAction(nameof(UserList));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await UserExists(user.Id))
+                {
+                    return NotFound();
+                }
+                throw;
+            }
         }
-        catch (Exception ex)
+        return View(user);
+    }
+
+    // GET: Account/Delete/id
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int? id)
+    {
+        if (id == null || id <= 0)
         {
-            _logger.LogError(ex, "Error fetching user list");
-            return View(new List<User>());
+            return NotFound();
         }
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return View(user);
+    }
+
+    // POST: Account/Delete/id
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = "User deleted successfully";
+        return RedirectToAction(nameof(UserList));
+    }
+
+    private async Task<bool> UserExists(int id)
+    {
+        return await _context.Users.AnyAsync(e => e.Id == id);
     }
 }

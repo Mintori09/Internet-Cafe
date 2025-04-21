@@ -17,6 +17,7 @@ public static class DatabaseSeeder
                 Balance = 1000000,
                 IsAdmin = true
             });
+            context.SaveChanges();
         }
 
         // Add sample users if not exists
@@ -31,6 +32,7 @@ public static class DatabaseSeeder
                 new User { Username = "user5", Password = "123456", FullName = "Hoàng Văn E", Balance = 150000, IsAdmin = false }
             };
             context.Users.AddRange(users);
+            context.SaveChanges();
         }
 
         // Add computers if not exists
@@ -50,6 +52,7 @@ public static class DatabaseSeeder
                 new Computer { Name = "PC-010", Status = true, PricePerHour = 10000 }
             };
             context.Computers.AddRange(computers);
+            context.SaveChanges();
         }
 
         // Add sample sessions if not exists
@@ -57,28 +60,30 @@ public static class DatabaseSeeder
         {
             var users = context.Users.ToList();
             var computers = context.Computers.ToList();
-            var random = new Random();
 
-            var sessions = new List<UserSession>();
-            for (int i = 0; i < 20; i++)
+            if (users.Any() && computers.Any())
             {
-                var user = users[random.Next(users.Count)];
-                var computer = computers[random.Next(computers.Count)];
-                var startTime = DateTime.Now.AddHours(-random.Next(1, 24));
-                var endTime = startTime.AddHours(random.Next(1, 5));
-
-                sessions.Add(new UserSession
+                var random = new Random();
+                var sessions = new List<UserSession>();
+                for (int i = 0; i < 20; i++)
                 {
-                    UserId = user.Id,
-                    ComputerId = computer.Id,
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    TotalCost = random.Next(10000, 50000)
-                });
-            }
-            context.UserSessions.AddRange(sessions);
-        }
+                    var user = users[random.Next(0, users.Count)];
+                    var computer = computers[random.Next(0, computers.Count)];
+                    var startTime = DateTime.Now.AddHours(-random.Next(1, 24));
+                    var endTime = startTime.AddHours(random.Next(1, 5));
 
-        context.SaveChanges();
+                    sessions.Add(new UserSession
+                    {
+                        UserId = user.Id,
+                        ComputerId = computer.Id,
+                        StartTime = startTime,
+                        EndTime = endTime,
+                        TotalCost = random.Next(10000, 50000)
+                    });
+                }
+                context.UserSessions.AddRange(sessions);
+                context.SaveChanges();
+            }
+        }
     }
 }

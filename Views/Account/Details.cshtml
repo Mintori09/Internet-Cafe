@@ -1,0 +1,55 @@
+@model InternetCafeManagementSystem.Models.User
+
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<h1>User Details</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Username</dt>
+        <dd class="col-sm-10">@Model.Username</dd>
+
+        <dt class="col-sm-2">Full Name</dt>
+        <dd class="col-sm-10">@Model.FullName</dd>
+
+        <dt class="col-sm-2">Balance</dt>
+        <dd class="col-sm-10">@Model.Balance.ToString("N0") VND</dd>
+
+        <dt class="col-sm-2">Status</dt>
+        <dd class="col-sm-10">@(Model.IsActive ? "Active" : "Inactive")</dd>
+
+        <dt class="col-sm-2">Role</dt>
+        <dd class="col-sm-10">@(Model.IsAdmin ? "Admin" : "User")</dd>
+    </dl>
+
+    <h4>Session History</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Computer</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Total Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var session in Model.Sessions?.OrderByDescending(s => s.StartTime) ?? Enumerable.Empty<UserSession>())
+            {
+                <tr>
+                    <td>@session.Computer.Name</td>
+                    <td>@session.StartTime.ToString("g")</td>
+                    <td>@(session.EndTime?.ToString("g") ?? "Active")</td>
+                    <td>@(session.TotalCost.ToString("N0") ?? "-") VND</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    <a asp-action="UserList" class="btn btn-secondary">Back to List</a>
+</div>

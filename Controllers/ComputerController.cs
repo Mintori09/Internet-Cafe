@@ -107,6 +107,8 @@ public class ComputerController : BaseController
                 return View(computer);
             }
 
+            computer.Status = true;
+
             await _computerService.AddComputerAsync(computer);
             TempData["SuccessMessage"] = "Thêm máy tính thành công.";
             return RedirectToAction(nameof(Index));
@@ -358,19 +360,19 @@ public class ComputerController : BaseController
     }
 
     [AcceptVerbs("Get", "Post")]
-    public async Task<IActionResult> VerifyComputerName(string name, int id = 0)
+public async Task<IActionResult> VerifyComputerName(string name, int id = 0)
+{
+    // Check for computers with the same name but different id
+    var isDuplicate = await _context.Computers
+        .AnyAsync(c => c.Name == name && c.Id != id);
+
+    if (isDuplicate)
     {
-        // Tìm máy tính khác có cùng tên nhưng khác id
-        var isDuplicate = await _context.Computers
-            .AnyAsync(c => c.Name == name && c.Id != id);
-
-        if (!isDuplicate)
-        {
-            return Json($"Tên máy '{name}' đã tồn tại. Vui lòng chọn tên khác.");
-        }
-
-        return Json(true);
+        return Json($"Tên máy '{name}' đã tồn tại. Vui lòng chọn tên khác.");
     }
+
+    return Json(true);
+}
 
     private bool ComputerExists(int id)
     {
