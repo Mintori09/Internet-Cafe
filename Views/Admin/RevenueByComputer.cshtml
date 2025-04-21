@@ -1,52 +1,73 @@
 @model IEnumerable<InternetCafeManagementSystem.Models.UserSession>
 
 @{
+    Layout = null;
     ViewData["Title"] = "Revenue by Computer";
 }
 
 <div class="container mt-4">
-    <h2>Revenue by Computer</h2>
-
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Computer</th>
-                    <th>Total Sessions</th>
-                    <th>Total Revenue</th>
-                    <th>Average Session Duration</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null)
-                {
-                    var sessionsByComputer = Model.GroupBy(s => s.ComputerId);
-                    @foreach (var group in sessionsByComputer)
-                    {
-                        var computer = group.First().Computer;
-                        var totalSessions = group.Count();
-                        var totalRevenue = group.Sum(s => s.TotalCost);
-                        var avgDuration = group.Average(s => s.EndTime.HasValue ? (s.EndTime.Value - s.StartTime).TotalHours : 0);
-
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Doanh Thu Theo Máy</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td>@computer?.Name</td>
-                            <td>@totalSessions</td>
-                            <td>@totalRevenue.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
-                            <td>@avgDuration.ToString("F1") hours</td>
+                            <th>Máy Tính</th>
+                            <th>Số Phiên</th>
+                            <th>Tổng Doanh Thu</th>
+                            <th>Thời Gian TB</th>
                         </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="4" class="text-center">No data available</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            var sessionsByComputer = Model.ToList().GroupBy(s => s.ComputerId);
+                            foreach (var group in sessionsByComputer)
+                            {
+                                var computer = group.FirstOrDefault()?.Computer;
+                                var totalSessions = group.Count();
+                                var totalRevenue = group.Sum(s => s.TotalCost);
+                                var avgDuration = group.Average(s => 
+                                    s.EndTime.HasValue ? (s.EndTime.Value - s.StartTime).TotalHours : 0);
+
+                                <tr>
+                                    <td>@computer?.Name</td>
+                                    <td>@totalSessions</td>
+                                    <td>@totalRevenue.ToString("N0") VNĐ</td>
+                                    <td>@avgDuration.ToString("F1") giờ</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center">Không có dữ liệu</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+</div>
+
+<script>
+    function filterTimeRevenue() {
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        
+        $.get('@Url.Action("RevenueByTime", "Admin")', { 
+            startDate: startDate, 
+            endDate: endDate 
+        }, function(data) {
+            $('#revenueContent .card-body').html(data);
+        });
+    }
+</script>
 
     <div class="mt-3">
         <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
     </div>
-</div>

@@ -1,19 +1,93 @@
 ﻿@{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Trang Chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome to Internet Cafe Management System</h1>
+<div class="hero-section text-center py-5" style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/images/cyber-cafe-bg.jpg') center/cover; color: white; min-height: 500px; display: flex; align-items: center; justify-content: center;">
+    <div class="container">
+        <h1 class="display-3 mb-4">Internet Cafe Management System</h1>
+        <p class="lead mb-5">Trải nghiệm dịch vụ Internet chất lượng cao với hệ thống máy tính hiện đại</p>
 
-    @if (Context.Session.GetInt32("UserId") == null)
-    {
-        <p class="lead mt-4">Please <a asp-controller="Account" asp-action="Login">login</a> or <a asp-controller="Account" asp-action="Register">register</a> to start using our services.</p>
-    }
-    else
-    {
-        <p class="lead mt-4">Welcome back, @Context.Session.GetString("Username")!</p>
-        <div class="mt-4">
-            <a asp-controller="Computer" asp-action="Index" class="btn btn-primary btn-lg">View Available Computers</a>
-        </div>
-    }
+        @if (Context.Session.GetInt32("UserId") == null)
+        {
+            <div class="auth-buttons">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg mx-2 px-4">
+                    <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập
+                </a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg mx-2 px-4">
+                    <i class="fas fa-user-plus me-2"></i>Đăng Ký
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="welcome-section">
+                <h2 class="h3 mb-4">Xin chào, @Context.Session.GetString("Username")!</h2>
+                <a asp-controller="Computer" asp-action="Index" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-desktop me-2"></i>Xem Máy Trống
+                </a>
+            </div>
+        }
+    </div>
 </div>
+
+<div class="features-section py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="card-body">
+                        <i class="fas fa-wifi fa-3x mb-3 text-primary"></i>
+                        <h3 class="h4">Internet Tốc Độ Cao</h3>
+                        <p>Kết nối mạng ổn định với tốc độ cao, đảm bảo trải nghiệm mượt mà</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="card-body">
+                        <i class="fas fa-gamepad fa-3x mb-3 text-primary"></i>
+                        <h3 class="h4">Cấu Hình Mạnh Mẽ</h3>
+                        <p>Hệ thống máy tính hiện đại với cấu hình cao, phù hợp mọi nhu cầu</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="card-body">
+                        <i class="fas fa-headset fa-3x mb-3 text-primary"></i>
+                        <h3 class="h4">Hỗ Trợ 24/7</h3>
+                        <p>Đội ngũ nhân viên chuyên nghiệp, sẵn sàng hỗ trợ mọi lúc</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .hero-section {
+            margin-top: -1rem;
+            margin-bottom: 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-buttons .btn {
+            transition: transform 0.2s;
+        }
+
+        .auth-buttons .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .features-section .card {
+            transition: transform 0.3s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .features-section .card:hover {
+            transform: translateY(-10px);
+        }
+    </style>
+}
