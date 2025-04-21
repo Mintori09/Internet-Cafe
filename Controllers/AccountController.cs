@@ -33,6 +33,7 @@ public class AccountController : BaseController
         {
             return RedirectToAction("Index", "Home");
         }
+
         return View();
     }
 
@@ -76,7 +77,16 @@ public class AccountController : BaseController
                 HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
 
                 _logger.LogInformation("User {Username} logged in successfully", username);
-                return RedirectToAction("Index", "Home");
+
+                // Chuyển hướng dựa trên vai trò
+                if (user.IsAdmin)
+                {
+                    return RedirectToAction("Dashboard", "Admin"); // Chuyển đến trang dashboard của admin
+                }
+                else
+                {
+                    return RedirectToAction("Index", "Home"); // Chuyển đến trang chọn máy của user
+                }
             }
 
             ModelState.AddModelError("", "Tên đăng nhập hoặc mật khẩu không đúng");
@@ -106,8 +116,10 @@ public class AccountController : BaseController
             {
                 return RedirectToAction("Login");
             }
+
             ModelState.AddModelError("", "Tên đăng nhập đã tồn tại");
         }
+
         return View(user);
     }
 
@@ -191,5 +203,20 @@ public class AccountController : BaseController
 
         TempData["SuccessMessage"] = $"Đã nạp {amount:N0} VNĐ vào tài khoản thành công";
         return RedirectToAction("Profile");
+    }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UserList()
+    {
+        try
+        {
+            var users = await _context.Users.ToListAsync();
+            return View(users);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching user list");
+            return View(new List<User>());
+        }
     }
 }

@@ -31,21 +31,35 @@ public class ComputerController : BaseController
 
     public async Task<IActionResult> Index()
     {
-        var computers = await _computerService.GetAllComputersAsync();
-        var userId = GetCurrentUserId();
+        // Retrieve UserId from session
+        var userId = HttpContext.Session.GetInt32("UserId");
 
-        if (userId != null)
+        // If no userId found in session, redirect to Login
+        if (!userId.HasValue)
         {
-            var activeSessions = await _computerService.GetUserSessionsAsync(userId);
-            ViewBag.ActiveSessions = activeSessions.Where(s => s.EndTime == null).ToList();
-
-            var user = await _userService.GetUserByIdAsync(userId);
-            if (user != null)
-            {
-                ViewBag.UserBalance = user.Balance;
-            }
+            return RedirectToAction("Login", "Account");
         }
 
+        // Retrieve user by userId
+        var user = await _userService.GetUserByIdAsync(userId.Value);
+
+        // If user is not found, redirect to AccessDenied page
+        if (user == null)
+        {
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        // Retrieve all computers asynchronously
+        var computers = await _computerService.GetAllComputersAsync();
+
+        // Retrieve active sessions for the user
+        var activeSessions = await _computerService.GetUserSessionsAsync(userId.Value);
+        ViewBag.ActiveSessions = activeSessions.Where(s => s.EndTime == null).ToList();
+
+        // Set user's balance in the ViewBag
+        ViewBag.UserBalance = user.Balance;
+
+        // Return the computers list to the view
         return View(computers);
     }
 
@@ -57,6 +71,7 @@ public class ComputerController : BaseController
         {
             return NotFound();
         }
+
         return View(computer);
     }
 
@@ -96,6 +111,7 @@ public class ComputerController : BaseController
             TempData["SuccessMessage"] = "Thêm máy tính thành công.";
             return RedirectToAction(nameof(Index));
         }
+
         return View(computer);
     }
 
@@ -108,6 +124,7 @@ public class ComputerController : BaseController
         {
             return NotFound();
         }
+
         return View(computer);
     }
 
@@ -122,21 +139,33 @@ public class ComputerController : BaseController
             return NotFound();
         }
 
-        // Kiểm tra tên máy tính
-        var existingComputer = await _context.Computers
-            .FirstOrDefaultAsync(c => c.Name == computer.Name && c.Id != id);
-
-        if (existingComputer != null)
+// Lấy máy hiện tại từ DB
+        var currentComputer = await _context.Computers.FirstOrDefaultAsync(c => c.Id == id);
+        if (currentComputer == null)
         {
-            ModelState.AddModelError("Name", $"Tên máy '{computer.Name}' đã tồn tại. Vui lòng chọn tên khác.");
-            return View(computer);
+            return NotFound();
+        }
+
+// Nếu tên mới khác tên hiện tại thì mới kiểm tra trùng
+        if (!string.Equals(currentComputer.Name, computer.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            var duplicate = await _context.Computers
+                .FirstOrDefaultAsync(c => c.Name == computer.Name);
+
+            if (duplicate != null)
+            {
+                ModelState.AddModelError("Name",
+                    $"Tên máy '{computer.Name}' đã tồn tại. Vui lòng chọn tên khác.");
+                return View(computer);
+            }
         }
 
         if (ModelState.IsValid)
         {
             try
             {
-                _context.Update(computer);
+                computer.Status = true;
+                _context.Entry(currentComputer).CurrentValues.SetValues(computer);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Cập nhật máy tính thành công.";
                 return RedirectToAction(nameof(Index));
@@ -153,6 +182,7 @@ public class ComputerController : BaseController
                 }
             }
         }
+
         return View(computer);
     }
 
@@ -165,6 +195,7 @@ public class ComputerController : BaseController
         {
             return NotFound();
         }
+
         return View(computer);
     }
 
@@ -329,11 +360,11 @@ public class ComputerController : BaseController
     [AcceptVerbs("Get", "Post")]
     public async Task<IActionResult> VerifyComputerName(string name, int id = 0)
     {
-        // Kiểm tra tên máy tính
-        var existingComputer = await _context.Computers
-            .FirstOrDefaultAsync(c => c.Name == name && c.Id != id);
+        // Tìm máy tính khác có cùng tên nhưng khác id
+        var isDuplicate = await _context.Computers
+            .AnyAsync(c => c.Name == name && c.Id != id);
 
-        if (existingComputer != null)
+        if (!isDuplicate)
         {
             return Json($"Tên máy '{name}' đã tồn tại. Vui lòng chọn tên khác.");
         }

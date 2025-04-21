@@ -57,7 +57,7 @@
                         <tr>
                             <td>@group.Key.ToString("yyyy-MM-dd")</td>
                             <td>@totalSessions</td>
-                            <td>@totalRevenue.ToString("C0")</td>
+                            <td>@totalRevenue.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
                             <td>@avgDuration.ToString("F1") hours</td>
                         </tr>
                     }

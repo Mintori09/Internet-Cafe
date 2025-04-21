@@ -13,13 +13,13 @@
                     <div class="col-md-5">
                         <div class="form-group">
                             <label for="startDate">Start Date:</label>
-                            <input type="date" class="form-control" id="startDate" name="startDate" required>
+                            <input type="date" class="form-control" id="startDate" name="startDate" required />
                         </div>
                     </div>
                     <div class="col-md-5">
                         <div class="form-group">
                             <label for="endDate">End Date:</label>
-                            <input type="date" class="form-control" id="endDate" name="endDate" required>
+                            <input type="date" class="form-control" id="endDate" name="endDate" required />
                         </div>
                     </div>
                     <div class="col-md-2">
@@ -35,63 +35,83 @@
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Summary</h5>
-                <p>Total Revenue: @ViewBag.TotalRevenue.ToString("C")</p>
-                <p>Date Range: @ViewBag.StartDate.ToString("d") - @ViewBag.EndDate.ToString("d")</p>
+                <p>Total Revenue: @((decimal)ViewBag.TotalRevenue).ToString("C")</p>
+
+                @if (ViewBag.StartDate != null && ViewBag.EndDate != null)
+                {
+                    <p>Date Range: @((DateTime)ViewBag.StartDate).ToString("d") - @((DateTime)ViewBag.EndDate).ToString("d")</p>
+                }
+                else
+                {
+                    <p>Date Range: Not available</p>
+                }
             </div>
         </div>
 
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Revenue by Computer</h5>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Computer</th>
-                            <th>Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var revenue in ViewBag.ComputerRevenues)
-                        {
+        @if (ViewBag.ComputerRevenues != null)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Revenue by Computer</h5>
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td>@revenue.Key</td>
-                                <td>@revenue.Value.ToString("C")</td>
+                                <th>Computer</th>
+                                <th>Revenue</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var revenue in ViewBag.ComputerRevenues)
+                            {
+                                <tr>
+                                    <td>@revenue.Key</td>
+                                    <td>@((decimal)revenue.Value).ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        }
 
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Detailed Sessions</h5>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Computer</th>
-                            <th>Start Time</th>
-                            <th>End Time</th>
-                            <th>Duration</th>
-                            <th>Cost</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var session in ViewBag.Sessions)
-                        {
+        @if (ViewBag.Sessions != null)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Detailed Sessions</h5>
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td>@session.User?.Username</td>
-                                <td>@session.Computer?.Name</td>
-                                <td>@session.StartTime.ToString("g")</td>
-                                <td>@(session.EndTime?.ToString("g") ?? "In Progress")</td>
-                                <td>@(session.EndTime.HasValue ? (session.EndTime.Value - session.StartTime).ToString(@"hh\:mm") : "N/A")</td>
-                                <td>@session.TotalCost.ToString("C")</td>
+                                <th>User</th>
+                                <th>Computer</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Cost</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var session in ViewBag.Sessions)
+                            {
+                                <tr>
+                                    <td>@session.User?.Username</td>
+                                    <td>@session.Computer?.Name</td>
+                                    <td>@session.StartTime.ToString("g")</td>
+                                    <td>@(session.EndTime?.ToString("g") ?? "In Progress")</td>
+                                    <td>
+                                        @(
+                                            session.EndTime.HasValue
+                                                ? (session.EndTime.Value - session.StartTime).ToString(@"hh\:mm")
+                                                : "N/A"
+                                        )
+                                    </td>
+                                    <td>@((decimal)session.TotalCost).ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        }
     }
 </div>
