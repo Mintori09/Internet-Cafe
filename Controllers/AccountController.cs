@@ -85,7 +85,7 @@ public class AccountController : BaseController
                 }
                 else
                 {
-                    return RedirectToAction("Index", "Home"); // Chuyển đến trang chọn máy của user
+                    return RedirectToAction("Index", "Computer"); // Chuyển đến trang chọn máy của user
                 }
             }
 
@@ -155,7 +155,6 @@ public class AccountController : BaseController
             return RedirectToAction("Login");
         }
 
-        // Lấy thông tin phiên sử dụng hiện tại
         var currentSession = await _context.UserSessions
             .Include(s => s.Computer)
             .FirstOrDefaultAsync(s => s.UserId == userId && s.EndTime == null);
@@ -205,11 +204,19 @@ public class AccountController : BaseController
         return RedirectToAction("Profile");
     }
 
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UserList()
     {
         try
         {
+            // Kiểm tra quyền từ session
+            var role = HttpContext.Session.GetString("Role");
+
+            if (string.IsNullOrEmpty(role) || role != "Admin")
+            {
+                TempData["ErrorMessage"] = "You are not authorized to view this page.";
+                return RedirectToAction("Login", "Account");
+            }
+
             var users = await _context.Users.ToListAsync();
             return View(users);
         }
